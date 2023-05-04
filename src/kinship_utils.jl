@@ -101,3 +101,65 @@ function calcIndKinship_from_StrainKinship(kinship_strains::Array{Float64, 2},
     
     return kinship_ind_from_strains
 end
+
+#####################################################################################################################
+############################################## Alternative ##########################################################
+#####################################################################################################################
+function createRanges(values::Array{Int64, 1})
+    
+    m = length(values); # number of strains
+    
+    list_ranges = Array{UnitRange{Int64}, 1}(undef, m)
+    startpt = 1
+    
+    for i in 1:length(values)
+        endpt = startpt+values[i]-1;
+        list_ranges[i] = startpt:endpt
+        startpt = endpt+1
+    end
+    
+    return list_ranges
+    
+end
+
+function mapIds(id::Int64, ranges::Array{UnitRange{Int64}, 1})
+    
+    curr_group = 1;
+    
+    while !(id in ranges[curr_group])
+        curr_group = curr_group+1;
+    end
+    
+    return curr_group
+    
+end
+
+function mapValues(idx::Int64, idy::Int64, ranges::Array{UnitRange{Int64}, 1}, K::Array{Float64, 2})
+    
+    f_idx = mapIds(idx, ranges);
+    f_idy = mapIds(idy, ranges);
+    
+    return K[f_idx, f_idy];
+    
+end
+
+function calcKinship2(kinship_strains::Array{Float64, 2}, 
+    strain_info_about_samples::Array{<:Any, 1})
+
+    counting_dict = calcRepeats(strain_info_about_samples);
+    reps_each_strain = map(x -> counting_dict[x], unique(strain_info_about_samples));
+    ranges = createRanges(reps_each_strain);
+
+    n = sum(reps_each_strain); # total number of individual samples
+
+    kinship_ind = ones(n, n);
+
+    for i in 1:n
+        for j in 1:n
+            kinship_ind[i, j] = mapValues(i, j, ranges, kinship_strains);
+        end
+    end
+
+    return kinship_ind;    
+
+end
