@@ -1,0 +1,3 @@
+# BigRiver_util_code
+
+Temporary repo to store utility functions written. Code to be stored in the main repo with the brand "BigRiver" which will be officially released soon...
