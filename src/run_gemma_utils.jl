@@ -68,7 +68,8 @@ function run_gemma(pheno::Array{Float64, 2}, geno::Array{Float64, 2}, kinship::A
 
         transform_pheno_to_gemma(pheno, i, "$pheno_filename");
         gemmaWrapper("$pheno_filename", "$geno_filename", "$kinship_filename", "$output_filename", gemma_path);
-        gemma_results = readdlm(joinpath("output/", "$output_filename", ".assoc.txt"), '\t');
+        temp = output_filename * ".assoc.txt";
+        gemma_results = readdlm(joinpath("output/", temp), '\t');
         gemma_pvals = gemma_results[2:end, end] |> x -> Array{Float64}(x);
         gemma_lods = p2lod.(gemma_pvals, 1);
         L[:, i] = gemma_lods;
