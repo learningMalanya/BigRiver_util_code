@@ -48,3 +48,33 @@ function run_gemma_bxd(pheno::Array{Float64, 2}, geno::Array{Float64, 2}, kinshi
     return L
 
 end
+
+function run_gemma(pheno::Array{Float64, 2}, geno::Array{Float64, 2}, kinship::Array{Float64, 2},
+                       alleles::Array{String, 1}, marker_names::Array{String, 1},
+                       pheno_filename::String, geno_filename::String, kinship_filename::String, output_filename::String, 
+                       gemma_path::String)
+
+    (n, m) = size(pheno);
+    p = size(geno, 2);
+
+    gemma = gemma_path;
+
+    L = zeros(p, m);
+
+    writedlm(kinship_filename, kinship, '\t');
+    transform_geno_to_gemma(geno, marker_names, alleles, geno_filename);
+
+    for i in 1:m
+
+        transform_pheno_to_gemma(pheno, i, "$pheno_filename");
+        gemmaWrapper("$pheno_filename", "$geno_filename", "$kinship_filename", "$output_filename");
+        gemma_results = readdlm(joinpath("output/", "$output_filename", ".assoc.txt"), '\t');
+        gemma_pvals = gemma_results[2:end, end] |> x -> Array{Float64}(x);
+        gemma_lods = p2lod.(gemma_pvals, 1);
+        L[:, i] = gemma_lods;
+
+    end
+
+    return L
+
+end
