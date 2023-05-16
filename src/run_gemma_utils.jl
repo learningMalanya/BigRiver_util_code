@@ -79,3 +79,12 @@ function run_gemma(pheno::Array{Float64, 2}, geno::Array{Float64, 2}, kinship::A
     return L
 
 end
+
+function p2lod(pval::Float64, df::Int64)
+    
+    lrs = invlogcdf(Chisq(df), log(1-pval))
+    lod = lrs/(2*log(10))
+    
+    return lod
+
+end
