@@ -14,7 +14,10 @@ function transform_geno_to_gemma(marker_values::Array{Float64, 2}, marker_names:
 end
 
 function gemmaWrapper(pheno_filename::String, geno_filename::String,
-                      kinship_filename::String, output_filename::String)
+                      kinship_filename::String, output_filename::String,
+                      gemma_path::String)
+
+    gemma = gemma_path;
 
     run(`$gemma -g $geno_filename -p $pheno_filename -k $kinship_filename -lmm 2 -lmax 1000000 -o $output_filename`)
 
@@ -27,8 +30,6 @@ function run_gemma_bxd(pheno::Array{Float64, 2}, geno::Array{Float64, 2}, kinshi
     (n, m) = size(pheno);
     p = size(geno, 2);
 
-    gemma = gemma_path;
-
     L = zeros(p, m);
 
     writedlm("data/GEMMA_data/bxd_kinship.txt", kinship, '\t');
@@ -37,7 +38,8 @@ function run_gemma_bxd(pheno::Array{Float64, 2}, geno::Array{Float64, 2}, kinshi
     for i in 1:m
 
         transform_pheno_to_gemma(pheno, i, "data/GEMMA_data/bxd_pheno.txt");
-        gemmaWrapper("data/GEMMA_data/bxd_pheno.txt", "data/GEMMA_data/bxd_geno.txt", "data/GEMMA_data/bxd_kinship.txt", "results_univariate_LMM");
+        gemmaWrapper("data/GEMMA_data/bxd_pheno.txt", "data/GEMMA_data/bxd_geno.txt", "data/GEMMA_data/bxd_kinship.txt", 
+                     "results_univariate_LMM", gemma_path);
         gemma_results = readdlm("output/results_univariate_LMM.assoc.txt", '\t');
         gemma_pvals = gemma_results[2:end, end] |> x -> Array{Float64}(x);
         gemma_lods = p2lod.(gemma_pvals, 1);
@@ -57,8 +59,6 @@ function run_gemma(pheno::Array{Float64, 2}, geno::Array{Float64, 2}, kinship::A
     (n, m) = size(pheno);
     p = size(geno, 2);
 
-    gemma = gemma_path;
-
     L = zeros(p, m);
 
     writedlm(kinship_filename, kinship, '\t');
@@ -67,7 +67,7 @@ function run_gemma(pheno::Array{Float64, 2}, geno::Array{Float64, 2}, kinship::A
     for i in 1:m
 
         transform_pheno_to_gemma(pheno, i, "$pheno_filename");
-        gemmaWrapper("$pheno_filename", "$geno_filename", "$kinship_filename", "$output_filename");
+        gemmaWrapper("$pheno_filename", "$geno_filename", "$kinship_filename", "$output_filename", gemma_path);
         gemma_results = readdlm(joinpath("output/", "$output_filename", ".assoc.txt"), '\t');
         gemma_pvals = gemma_results[2:end, end] |> x -> Array{Float64}(x);
         gemma_lods = p2lod.(gemma_pvals, 1);
